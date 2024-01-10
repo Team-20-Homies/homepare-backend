@@ -48,6 +48,12 @@ app.get('/homes', async (req, res) => {
     res.json({ homes })
 })
 
+app.post('/homes', async (req, res) => {
+    const homes = await Homes.create(req.body)
+    console.log(req.body)
+    res.json({ homes })
+})
+
 
 
 
