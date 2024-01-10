@@ -2,6 +2,11 @@ const mongoose = require('mongoose')
 
 const HomeSchema = new mongoose.Schema({
     address: String,
+    bedrooms: Number,
+    bathrooms: Number,
+    yard: Boolean,
+    garage: Boolean,
+    hoa: Boolean,
     notes: String,
     sentiment: String,
     archived: Boolean,
