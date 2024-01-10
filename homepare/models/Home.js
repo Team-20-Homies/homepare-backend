@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const HomeSchema = new mongoose.Schema({
+const HomesSchema = new mongoose.Schema({
     address: String,
     bedrooms: Number,
     bathrooms: Number,
@@ -15,4 +15,4 @@ const HomeSchema = new mongoose.Schema({
 
 })
 
-module.exports = mongoose.model('Home', HomeSchema)
+module.exports = mongoose.model('Homes', HomesSchema)
