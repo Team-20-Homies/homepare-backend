@@ -1,6 +1,8 @@
 const express = require("express");
 const connectDB = require('./db/connect')
 const mongoose = require('mongoose')
+const axios = require('axios');
+const jwt = require('jsonwebtoken');
 require('dotenv').config()
 
 // getting the Models to query the DB
@@ -54,7 +56,38 @@ app.post('/homes', async (req, res) => {
     res.json({ homes })
 })
 
+// Generates a bearer token using axios
+// async function generateAccessToken() {
+//     const response = await axios({
+//         url: base + "/v1/oauth2/token",
+//         method: "post",
+//         data: "grant_type=client_credentials",
+//         auth: {
+//             username: CLIENT_ID,
+//             password: APP_SECRET,
+//         },
+//     });
+//     return response.data;
+// }
 
+// Login url
+app.post("/login", async(req, res) => {
+
+    const loginData = req.body.loginData;
+    const username = "panini"; // Replace hard code with DB info
+    const password = "badpassword"; // Replace hard code with DB info
+
+    if(username === loginData.username && password === loginData.password){
+
+        const token = jwt.sign({username: username, role: 'user'}, 'temporarysecretkey', {expiresIn: "24h"});
+        return res.status(200).send({token});
+    }
+
+    return res.status(401).send({error: "Invalid username or password"});
+  //  const data = await generateAccessToken();
+  //  console.log(data);
+  //  res.json(data);
+})
 
 
 
