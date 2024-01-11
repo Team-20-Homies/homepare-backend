@@ -6,11 +6,7 @@
   "scripts": {
     "test": "\"echo \\\"Error: no test specified\\\" && exit 1\"",
     "lint": "eslint src/js",
-<<<<<<< HEAD
     "start": "nodemon index.js"
-=======
-    "start": "node index.js"
->>>>>>> 9ae853141edaa22b1542714a9a2ecd6426d99611
   },
   "repository": {
     "type": "git",
@@ -31,6 +27,7 @@
     "nodemon": "^3.0.2"
   },
   "devDependencies": {
-    "eslint": "^8.56.0"
+    "eslint": "^8.56.0",
+    "nodemon": "^3.0.2"
   }
 }
