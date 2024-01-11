@@ -2,6 +2,7 @@ const express = require("express");
 const connectDB = require('./db/connect')
 const mongoose = require('mongoose')
 require('dotenv').config()
+const axios = require("axios")
 
 // getting the Models to query the DB
 const User = require('./models/User')
@@ -49,7 +50,34 @@ app.get('/homes', async (req, res) => {
 })
 
 app.post('/homes', async (req, res) => {
-    const homes = await Homes.create(req.body)
+    let results = {}
+    const address = req.body.address
+
+    axios.get('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail?address=' + { address })
+        .then((response) => {
+            results = response.data
+            console.log('response: ', response.data.property)
+            console.log('results: ', results)
+        })
+    // const homes = await Homes.create(req.body)
+    const homes = await Homes.create(
+        { 'address': address },
+        { 'price': null }, // need this field
+        { "property_type": results.summary.propertyType },
+        { "bedrooms": results.building.rooms.beds },
+        { "half_bath": results.building.rooms.bathspartial },
+        { "full_bath": results.building.rooms.bathsfull },
+        { "living_area": results.building.size.livingsize },
+        { "yard": null },
+        { "garage": null }, //need this field
+        { "images": {} },
+        { 'notes': req.body.notes },
+        { 'sentiment': null }, // fill in after AI integrated
+        { 'archived': req.body.archived },
+        { 'CollectionID': req.body.CollectionID }
+
+
+    )
     console.log(req.body)
     res.json({ homes })
 })
