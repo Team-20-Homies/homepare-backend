@@ -6,7 +6,11 @@
   "scripts": {
     "test": "\"echo \\\"Error: no test specified\\\" && exit 1\"",
     "lint": "eslint src/js",
+<<<<<<< HEAD
     "start": "nodemon index.js"
+=======
+    "start": "node index.js"
+>>>>>>> 9ae853141edaa22b1542714a9a2ecd6426d99611
   },
   "repository": {
     "type": "git",
