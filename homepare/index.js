@@ -2,7 +2,8 @@ const express = require("express");
 const connectDB = require('./db/connect')
 const mongoose = require('mongoose')
 const morgan = require('morgan');
-require('dotenv').config()
+const cors = require('cors');
+require('dotenv').config();
 const axios = require("axios")
 
 // getting the Models to query the DB
@@ -13,7 +14,8 @@ const Homes = require('./models/Home')
 
 const app = express();
 app.use(express.json());
-// app.use(morgan('combined'));
+app.use(morgan('combined'));
+app.use(cors());
 
 
 // users - collection
@@ -53,10 +55,10 @@ app.get('/homes', async (req, res) => {
 })
 
 app.post('/homes', async (req, res) => {
-
-    console.log('HELLO WORLD!!', req.body);
     const address = req.body.address;
     let results = {};
+
+    // call to the realty API
     try {
         let response = await axios.get('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail?address=' + address, {
             headers: {
@@ -64,9 +66,9 @@ app.post('/homes', async (req, res) => {
                 apikey: '2b1e86b638620bf2404521e6e9e1b19e',
             }
         });
-
         results = response.data.property[0];
-        console.log('results: ', results.building.size.bathfull);
+
+        // adds results from realty api to the DB
         const homes = await Homes.create({
             "address": results.address.oneLine,
             "price": req.body.price,
@@ -85,40 +87,10 @@ app.post('/homes', async (req, res) => {
             "searchID": req.body.CollectionID,
         })
         res.json({ homes });
-        // console.log('axios results: ', response.data);
     } catch {
         // console.log(err);
         res.status(500).json({ msg: "something bad has occurred." });
     }
-
-    // axios.get('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail?address=' + { address })
-    //     .then((response) => {
-    //         results = response.data
-    //         console.log('response: ', response.data.property)
-    //         console.log('results: ', results)
-    //     })
-    // const homes = await Homes.create(req.body)
-
-    // const homes = await Homes.create(
-    //     // { "address": address }
-    //     { 'address': results[address].oneLine },
-    //     { 'price': null }, // need this field
-    //     { "property_type": results[summary].propertyType },
-    //     { "bedrooms": results.building.rooms.beds },
-    //     { "half_bath": results.building.rooms.bathspartial },
-    //     { "full_bath": results.building.rooms.bathsfull },
-    //     { "living_area": results.building.size.livingsize },
-    //     { "yard": null },
-    //     { "garage": null }, //need this field
-    //     { "images": {} },
-    //     { 'notes': req.body.notes },
-    //     { 'sentiment': null }, // fill in after AI integrated
-    //     { 'archived': req.body.archived },
-    //     { 'CollectionID': req.body.CollectionID }
-
-
-    // )
-    // res.json({ homes })
 })
 
 
