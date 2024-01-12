@@ -6,7 +6,7 @@ const axios = require("axios")
 
 // getting the Models to query the DB
 const User = require('./models/User')
-const Collections = require('./models/Collection')
+const search = require('./models/Searches')
 const Homes = require('./models/Home')
 
 
@@ -30,40 +30,50 @@ app.get('/user', async (req, res) => {
 // collections - collection
 app.get('/collections', async (req, res) => {
     //get info from database and return json
-    const collections = await Collections.find({}).exec();
-    res.json({ collections })
+    const search = await Search.find({}).exec();
+    res.json({ search })
 })
 
 app.post('/collections', async (req, res) => {
     //pushes new collection info into db
-    const collections = await Collections.create(req.body)
+    const search = await Search.create(req.body)
     console.log(req.body)
-    res.json({ collections })
+    res.json({ search })
 })
 
 
 // homes - collection
 app.get('/homes', async (req, res) => {
     //gets info for all homes
+    console.log('inside of get homes')
     const homes = await Homes.find({}).exec();
     res.json({ homes })
 })
 
 app.post('/homes', async (req, res) => {
-    let results = {}
+    console.log('HELLO WORLD!!', req);
     const address = req.body.address
+    let results = {}
+    try {
+        let response = await axios.get('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail?address=' + { address })
+        results = response.property
+    } catch {
+        console.log(err);
+        res.status(500).json({ msg: "something bad has occurred." });
+    }
 
-    axios.get('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail?address=' + { address })
-        .then((response) => {
-            results = response.data
-            console.log('response: ', response.data.property)
-            console.log('results: ', results)
-        })
+    // axios.get('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail?address=' + { address })
+    //     .then((response) => {
+    //         results = response.data
+    //         console.log('response: ', response.data.property)
+    //         console.log('results: ', results)
+    //     })
     // const homes = await Homes.create(req.body)
+    console.log('axios results: ', results)
     const homes = await Homes.create(
-        { 'address': address },
+        { 'address': results[address].oneLine },
         { 'price': null }, // need this field
-        { "property_type": results.summary.propertyType },
+        { "property_type": results[summary].propertyType },
         { "bedrooms": results.building.rooms.beds },
         { "half_bath": results.building.rooms.bathspartial },
         { "full_bath": results.building.rooms.bathsfull },

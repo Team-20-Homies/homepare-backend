@@ -15,7 +15,7 @@ const HomesSchema = new mongoose.Schema({
     notes: String,
     sentiment: String,
     archived: Boolean,
-    CollectionID: String,
+    searchID: String,
 
 })
 
