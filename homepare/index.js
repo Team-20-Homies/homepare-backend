@@ -3,6 +3,9 @@ const connectDB = require('./db/connect')
 const mongoose = require('mongoose')
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
+const jwtAuth = require("./middleware/jwtAuth");
+const verifySignUp = require('./middleware/verifySignUp')
+const bcrypt = require("bcrypt");
 require('dotenv').config()
 
 // getting the Models to query the DB
@@ -14,6 +17,23 @@ const Homes = require('./models/Home')
 const app = express();
 app.use(express.json());
 
+// Authenticates new user and hashes password
+app.post("/register",
+[verifySignUp.checkDuplicateUserInfo],
+async (req, res) => {
+    const user = await User.create({
+      username: req.body.username,
+      email: req.body.email,
+      password: bcrypt.hashSync(req.body.password, 8)
+    });
+
+    res.json({ user })
+    //   if (err) {
+    //     res.status(500).send({ message: err });
+    //     return;
+    //   }
+    // })
+})
 
 // users - collection
 app.post('/user', async (req, res) => {
@@ -55,20 +75,6 @@ app.post('/homes', async (req, res) => {
     console.log(req.body)
     res.json({ homes })
 })
-
-// Generates a bearer token using axios
-// async function generateAccessToken() {
-//     const response = await axios({
-//         url: base + "/v1/oauth2/token",
-//         method: "post",
-//         data: "grant_type=client_credentials",
-//         auth: {
-//             username: CLIENT_ID,
-//             password: APP_SECRET,
-//         },
-//     });
-//     return response.data;
-// }
 
 // Login url
 app.post("/login", async(req, res) => {
