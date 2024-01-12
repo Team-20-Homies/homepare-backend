@@ -6,16 +6,20 @@ const jwt = require('jsonwebtoken');
 const jwtAuth = require("./middleware/jwtAuth");
 const verifySignUp = require('./middleware/verifySignUp')
 const bcrypt = require("bcrypt");
-require('dotenv').config()
+const morgan = require('morgan');
+const cors = require('cors');
+require('dotenv').config();
 
 // getting the Models to query the DB
 const User = require('./models/User')
-const Collections = require('./models/Collection')
+const search = require('./models/Searches')
 const Homes = require('./models/Home')
 
 
 const app = express();
 app.use(express.json());
+app.use(morgan('combined'));
+app.use(cors());
 
 // Authenticates new user and hashes password
 app.post("/register",
@@ -51,29 +55,63 @@ app.get('/user', async (req, res) => {
 // collections - collection
 app.get('/collections', async (req, res) => {
     //get info from database and return json
-    const collections = await Collections.find({}).exec();
-    res.json({ collections })
+    const search = await Search.find({}).exec();
+    res.json({ search })
 })
 
 app.post('/collections', async (req, res) => {
     //pushes new collection info into db
-    const collections = await Collections.create(req.body)
+    const search = await Search.create(req.body)
     console.log(req.body)
-    res.json({ collections })
+    res.json({ search })
 })
 
 
 // homes - collection
 app.get('/homes', async (req, res) => {
     //gets info for all homes
+    console.log('inside of get homes')
     const homes = await Homes.find({}).exec();
     res.json({ homes })
 })
 
 app.post('/homes', async (req, res) => {
-    const homes = await Homes.create(req.body)
-    console.log(req.body)
-    res.json({ homes })
+    const address = req.body.address;
+    let results = {};
+
+    // call to the realty API
+    try {
+        let response = await axios.get('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail?address=' + address, {
+            headers: {
+                Accept: 'application/json',
+                apikey: '2b1e86b638620bf2404521e6e9e1b19e',
+            }
+        });
+        results = response.data.property[0];
+
+        // adds results from realty api to the DB
+        const homes = await Homes.create({
+            "address": results.address.oneLine,
+            "price": null,
+            "property_type": results.summary.propertyType,
+            "bedrooms": results.building.rooms.beds,
+            "half_bath": results.building.rooms.bathspartial,
+            "full_bath": results.building.rooms.bathsfull,
+            "living_area": results.building.size.livingsize,
+            "yard": null,
+            "garage": null,
+            "hoa": null,
+            "images": {},
+            "notes": null,
+            "sentiment": null,
+            "archived": null,
+            "searchID": null,
+        })
+        res.json({ homes });
+    } catch {
+        // console.log(err);
+        res.status(500).json({ msg: "something bad has occurred." });
+    }
 })
 
 // Login url
