@@ -32,11 +32,6 @@ async (req, res) => {
     });
 
     res.json({ user })
-    //   if (err) {
-    //     res.status(500).send({ message: err });
-    //     return;
-    //   }
-    // })
 })
 
 // users - collection
