@@ -71,20 +71,20 @@ app.post('/homes', async (req, res) => {
         // adds results from realty api to the DB
         const homes = await Homes.create({
             "address": results.address.oneLine,
-            "price": req.body.price,
+            "price": null,
             "property_type": results.summary.propertyType,
             "bedrooms": results.building.rooms.beds,
             "half_bath": results.building.rooms.bathspartial,
             "full_bath": results.building.rooms.bathsfull,
             "living_area": results.building.size.livingsize,
-            "yard": req.body.yard,
-            "garage": req.body.garage,
-            "hoa": req.body.hoa,
+            "yard": null,
+            "garage": null,
+            "hoa": null,
             "images": {},
-            "notes": req.body.notes,
-            "sentiment": req.body.sentiment,
-            "archived": req.body.archived,
-            "searchID": req.body.CollectionID,
+            "notes": null,
+            "sentiment": null,
+            "archived": null,
+            "searchID": null,
         })
         res.json({ homes });
     } catch {
