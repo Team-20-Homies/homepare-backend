@@ -5,6 +5,11 @@ const User = require('../models/User.js');
 checkDuplicateUserInfo = async (req, res, next) => {
     const username = req.body.username;
     const email = req.body.email;
+    const password = req.body.password;
+
+    if( !username || !email || !password ) {
+        return res.status(400).send({ message: "Missing username, email, or password"});
+    }
 
     // Username check
     const usernameExists = await User.findOne({ username: username });
