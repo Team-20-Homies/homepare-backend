@@ -9,11 +9,13 @@ const bcrypt = require("bcrypt");
 const morgan = require('morgan');
 const cors = require('cors');
 require('dotenv').config();
+const config = require("./config/auth.config.js");
 
 // getting the Models to query the DB
 const User = require('./models/User')
 const search = require('./models/Searches')
-const Homes = require('./models/Home')
+const Homes = require('./models/Home');
+const verifyLogin = require("./middleware/verifyLogin");
 
 
 const app = express();
@@ -110,22 +112,12 @@ app.post('/homes', async (req, res) => {
 })
 
 // Login url
-app.post("/login", async(req, res) => {
+app.post("/login", [verifyLogin.verifyCredentials] , (req, res) => {
 
-    const loginData = req.body.loginData;
-    const username = "panini"; // Replace hard code with DB info
-    const password = "badpassword"; // Replace hard code with DB info
+    const username = req.body.username;
 
-    if(username === loginData.username && password === loginData.password){
-
-        const token = jwt.sign({username: username, role: 'user'}, 'temporarysecretkey', {expiresIn: "24h"});
-        return res.status(200).send({token});
-    }
-
-    return res.status(401).send({error: "Invalid username or password"});
-  //  const data = await generateAccessToken();
-  //  console.log(data);
-  //  res.json(data);
+    const token = jwt.sign({username: username, role: 'user'}, config.secret, {expiresIn: "24h"});
+    return res.status(200).send({token});
 })
 
 
