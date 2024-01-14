@@ -1,15 +1,21 @@
 const express = require("express");
 const connectDB = require('./db/connect')
 const mongoose = require('mongoose')
+const axios = require('axios');
+const jwt = require('jsonwebtoken');
+const jwtAuth = require("./middleware/jwtAuth");
+const verifySignUp = require('./middleware/verifySignUp')
+const bcrypt = require("bcrypt");
 const morgan = require('morgan');
 const cors = require('cors');
 require('dotenv').config();
-const axios = require("axios")
+const config = require("./config/auth.config.js");
 
 // getting the Models to query the DB
 const User = require('./models/User')
 const search = require('./models/Searches')
-const Homes = require('./models/Home')
+const Homes = require('./models/Home');
+const verifyLogin = require("./middleware/verifyLogin");
 
 
 const app = express();
@@ -17,6 +23,18 @@ app.use(express.json());
 app.use(morgan('combined'));
 app.use(cors());
 
+// Authenticates new user and hashes password
+app.post("/register",
+[verifySignUp.checkDuplicateUserInfo],
+async (req, res) => {
+    const user = await User.create({
+      username: req.body.username,
+      email: req.body.email,
+      password: bcrypt.hashSync(req.body.password, 8)
+    });
+
+    res.json({ user })
+})
 
 // users - collection
 app.post('/user', async (req, res) => {
@@ -93,7 +111,14 @@ app.post('/homes', async (req, res) => {
     }
 })
 
+// Login url
+app.post("/login", [verifyLogin.verifyCredentials] , (req, res) => {
 
+    const username = req.body.username;
+
+    const token = jwt.sign({username: username, role: 'user'}, config.secret, {expiresIn: "24h"});
+    return res.status(200).send({token});
+})
 
 
 
