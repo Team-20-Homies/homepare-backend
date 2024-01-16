@@ -25,16 +25,16 @@ app.use(cors());
 
 // Authenticates new user and hashes password
 app.post("/register",
-[verifySignUp.checkDuplicateUserInfo],
-async (req, res) => {
-    const user = await User.create({
-      username: req.body.username,
-      email: req.body.email,
-      password: bcrypt.hashSync(req.body.password, 8)
-    });
+    [verifySignUp.checkDuplicateUserInfo],
+    async (req, res) => {
+        const user = await User.create({
+            username: req.body.username,
+            email: req.body.email,
+            password: bcrypt.hashSync(req.body.password, 8)
+        });
 
-    res.json({ user })
-})
+        res.json({ user })
+    })
 
 // users - collection
 app.post('/user', async (req, res) => {
@@ -111,15 +111,30 @@ app.post('/homes', async (req, res) => {
     }
 })
 
+// home details 
+app.get('/home/:id', (req, res) => {
+    const homes = Homes.findById(req.body._id).exec();
+    res.json(homes)
+})
+
+app.put('/home/:id', async (req, res) => {
+    const home = await Homes.findByIdAndUpdate(req.body.id, req.body, { new: true }, (err, Home) => {
+        if (err) return res.status(500).send(err);
+        return res.send(home);
+    })
+    res.json(homes)
+})
+
+
+
 // Login url
-app.post("/login", [verifyLogin.verifyCredentials] , (req, res) => {
+app.post("/login", [verifyLogin.verifyCredentials], (req, res) => {
 
     const username = req.body.username;
 
-    const token = jwt.sign({username: username, role: 'user'}, config.secret, {expiresIn: "24h"});
-    return res.status(200).send({token});
+    const token = jwt.sign({ username: username, role: 'user' }, config.secret, { expiresIn: "24h" });
+    return res.status(200).send({ token });
 })
-
 
 
 
