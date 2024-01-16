@@ -13,9 +13,10 @@ const config = require("./config/auth.config.js");
 
 // getting the Models to query the DB
 const User = require('./models/User')
-const search = require('./models/Searches')
+const Searches = require('./models/Searches')
 const Homes = require('./models/Home');
 const verifyLogin = require("./middleware/verifyLogin");
+const UserPreference = require("./models/UserPreference.js");
 
 
 const app = express();
@@ -52,15 +53,24 @@ app.get('/user', async (req, res) => {
 // collections - collection
 app.get('/collections', async (req, res) => {
     //get info from database and return json
-    const search = await Search.find({}).exec();
+    const search = await Searches.find({}).exec();
     res.json({ search })
 })
 
 app.post('/collections', async (req, res) => {
     //pushes new collection info into db
-    const search = await Search.create(req.body)
+    const search = await Searches.create(req.body)
     console.log(req.body)
     res.json({ search })
+})
+
+app.put('/collections/:id', async (req, res) => {
+    try {
+        const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
+        res.json({ search })
+    } catch {
+        res.status(500).json(Error)
+    }
 })
 
 
@@ -73,58 +83,33 @@ app.get('/homes', async (req, res) => {
 })
 
 app.post('/homes', async (req, res) => {
-    const address = req.body.address;
-    let results = {};
+    // pushes new home listing into db
+    const home = await Homes.create(req.body);
+    res.json({ home })
 
-    // call to the realty API
-    try {
-        let response = await axios.get('https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail?address=' + address, {
-            headers: {
-                Accept: 'application/json',
-                apikey: '2b1e86b638620bf2404521e6e9e1b19e',
-            }
-        });
-        results = response.data.property[0];
-
-        // adds results from realty api to the DB
-        const homes = await Homes.create({
-            "address": results.address.oneLine,
-            "price": null,
-            "property_type": results.summary.propertyType,
-            "bedrooms": results.building.rooms.beds,
-            "half_bath": results.building.rooms.bathspartial,
-            "full_bath": results.building.rooms.bathsfull,
-            "living_area": results.building.size.livingsize,
-            "yard": null,
-            "garage": null,
-            "hoa": null,
-            "images": {},
-            "notes": null,
-            "sentiment": null,
-            "archived": null,
-            "searchID": null,
-        })
-        res.json({ homes });
-    } catch {
-        // console.log(err);
-        res.status(500).json({ msg: "something bad has occurred." });
-    }
 })
 
 // home details 
 app.get('/home/:id', (req, res) => {
-    const homes = Homes.findById(req.body._id).exec();
+    const homes = Homes.findById(req.params._id).exec();
     res.json(homes)
 })
 
-app.put('/home/:id', async (req, res) => {
-    const home = await Homes.findByIdAndUpdate(req.body.id, req.body, { new: true }, (err, Home) => {
-        if (err) return res.status(500).send(err);
-        return res.send(home);
-    })
-    res.json(homes)
+app.put('/homes/:id', async (req, res) => {
+    try {
+        const home = await Homes.findByIdAndUpdate(req.params.id, req.body, { new: true })
+        res.json(home)
+    } catch {
+        res.status(500).json(Error)
+    }
 })
 
+
+// user preference endpoints
+app.post('/user-preference', async (req, res) => {
+    const userPref = await UserPreference.create(req.body)
+    res.json({ userPref })
+})
 
 
 // Login url
