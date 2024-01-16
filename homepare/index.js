@@ -16,6 +16,7 @@ const User = require('./models/User')
 const search = require('./models/Searches')
 const Homes = require('./models/Home');
 const verifyLogin = require("./middleware/verifyLogin");
+const Blacklist = require("./models/Blacklist.js");
 
 
 const app = express();
@@ -120,6 +121,25 @@ app.post("/login", [verifyLogin.verifyCredentials] , (req, res) => {
     return res.status(200).send({token});
 })
 
+// Logout function
+// app.get("/logout", async (req, res) => {
+//     const authHeader = req.headers['cookie'];
+//     if (!authHeader) {
+//         return res.status(204).send({ message: "No authorization token"})
+//     };
+//     const cookie = authHeader.split('=')[1];
+//     const accessToken = cookie.split(';')[0];
+//     const checkIfBlacklisted = await Blacklist.findOne({ token: accessToken });
+//     if (checkIfBlacklisted) {
+//         return res.status(401).send({ message: "Unauthorized: Token expired"});
+//     }
+//     const newBlacklist = new Blacklist({
+//         token: accessToken,
+//     });
+//     await newBlacklist.save();
+//     res.setHeader('Clear-Site-Data', '"cookies"');
+//     res.status(200).send({ message: 'Successfully logged out'});
+// });
 
 
 
