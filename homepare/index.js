@@ -139,7 +139,6 @@ app.get("/logout", async (req, res) => {
         token: accessToken,
     });
     await newBlacklist.save();
-    res.setHeader('Clear-Site-Data', '"cookies"');
     res.status(200).send({ message: 'Successfully logged out'});
 });
 
