@@ -117,29 +117,31 @@ app.post("/login", [verifyLogin.verifyCredentials] , (req, res) => {
 
     const username = req.body.username;
 
-    const token = jwt.sign({username: username, role: 'user'}, config.secret, {expiresIn: "24h"});
+    const token = jwt.sign({username: username}, config.secret, {expiresIn: "24h"});
     return res.status(200).send({token});
 })
 
 // Logout function
-// app.get("/logout", async (req, res) => {
-//     const authHeader = req.headers['cookie'];
-//     if (!authHeader) {
-//         return res.status(204).send({ message: "No authorization token"})
-//     };
-//     const cookie = authHeader.split('=')[1];
-//     const accessToken = cookie.split(';')[0];
-//     const checkIfBlacklisted = await Blacklist.findOne({ token: accessToken });
-//     if (checkIfBlacklisted) {
-//         return res.status(401).send({ message: "Unauthorized: Token expired"});
-//     }
-//     const newBlacklist = new Blacklist({
-//         token: accessToken,
-//     });
-//     await newBlacklist.save();
-//     res.setHeader('Clear-Site-Data', '"cookies"');
-//     res.status(200).send({ message: 'Successfully logged out'});
-// });
+app.get("/logout", async (req, res) => {
+    console.log(req);
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+        return res.status(400).send({ message: "No authorization token"})
+    };
+    console.log(authHeader)
+    const accessToken = authHeader.split(' ')[1];
+    console.log(accessToken);
+    const checkIfBlacklisted = await Blacklist.findOne({ token: accessToken });
+    if (checkIfBlacklisted) {
+        return res.status(401).send({ message: "Unauthorized: Token expired"});
+    }
+    const newBlacklist = new Blacklist({
+        token: accessToken,
+    });
+    await newBlacklist.save();
+    res.setHeader('Clear-Site-Data', '"cookies"');
+    res.status(200).send({ message: 'Successfully logged out'});
+});
 
 
 
