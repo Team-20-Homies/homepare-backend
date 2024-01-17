@@ -6,6 +6,7 @@ const BlacklistSchema = new mongoose.Schema(
             required: true,
             ref: "User",
         },
+        createdAt: { type: Date, expires: 86400 }
     },
     { timestamps: true }
 );
