@@ -66,7 +66,7 @@ app.post('/collections', async (req, res) => {
 
 
 // homes - collection
-app.get('/homes', async (req, res) => {
+app.get('/homes', [jwtAuth.verifyToken], async (req, res) => {
     //gets info for all homes
     console.log('inside of get homes')
     const homes = await Homes.find({}).exec();
