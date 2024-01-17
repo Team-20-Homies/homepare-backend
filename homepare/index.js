@@ -38,26 +38,26 @@ async (req, res) => {
 })
 
 // users - collection
-app.post('/user', async (req, res) => {
+app.post('/user', [jwtAuth.verifyToken], async (req, res) => {
     //get user info and compare for login. issue token?
     const user = await User.create(req.body)
     res.json({ user })
 })
 
-app.get('/user', async (req, res) => {
+app.get('/user', [jwtAuth.verifyToken], async (req, res) => {
     const user = await User.find({}).exec();
     res.json({ user })
 })
 
 
 // collections - collection
-app.get('/collections', async (req, res) => {
+app.get('/collections', [jwtAuth.verifyToken], async (req, res) => {
     //get info from database and return json
     const search = await Search.find({}).exec();
     res.json({ search })
 })
 
-app.post('/collections', async (req, res) => {
+app.post('/collections', [jwtAuth.verifyToken], async (req, res) => {
     //pushes new collection info into db
     const search = await Search.create(req.body)
     console.log(req.body)
@@ -73,7 +73,7 @@ app.get('/homes', [jwtAuth.verifyToken], async (req, res) => {
     res.json({ homes })
 })
 
-app.post('/homes', async (req, res) => {
+app.post('/homes', [jwtAuth.verifyToken], async (req, res) => {
     const address = req.body.address;
     let results = {};
 
