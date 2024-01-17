@@ -116,7 +116,7 @@ app.post("/login", [verifyLogin.verifyCredentials] , (req, res) => {
 
     const username = req.body.username;
 
-    const token = jwt.sign({username: username, role: 'user'}, config.secret, {expiresIn: "24h"});
+    const token = jwt.sign({username: username}, config.secret, {expiresIn: "24h"});
     return res.status(200).send({token});
 })
 
