@@ -53,6 +53,8 @@ app.get('/user', [jwtAuth.verifyToken], async (req, res) => {
 
 // collections - collection
 app.get('/collections', [jwtAuth.verifyToken], async (req, res) => {
+    // Extract userID from jwt payload
+
     //get info from database and return json
     const search = await Searches.find({}).exec();
     res.json({ search })
@@ -77,6 +79,10 @@ app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
 
 // homes - collection
 app.get('/homes', [jwtAuth.verifyToken], async (req, res) => {
+    //Testing extracting userId
+    const userId = req.userId
+    console.log("After verification: ", userId);
+
     //gets info for all homes
     console.log('inside of get homes')
     const homes = await Homes.find({}).exec();
@@ -123,8 +129,8 @@ app.post("/login", [verifyLogin.verifyCredentials], async (req, res) => {
     const user = userObj[0];
     const userId = user._id;
 
-    const token = jwt.sign({username: username}, config.secret, {expiresIn: "24h"});
-    return res.status(200).send({token, userId});
+    const token = jwt.sign({userId: userId}, config.secret, {expiresIn: "24h"});
+    return res.status(200).send({token});
 })
 
 // Logout function
