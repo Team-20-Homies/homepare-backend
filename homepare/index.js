@@ -54,13 +54,14 @@ app.get('/user', [jwtAuth.verifyToken], async (req, res) => {
 // collections - collection
 app.get('/collections', [jwtAuth.verifyToken], async (req, res) => {
     // Extract userID from jwt payload
-
+    const userId = req.userId
     //get info from database and return json
     const search = await Searches.find({}).exec();
     res.json({ search })
 })
 
 app.post('/collections', [jwtAuth.verifyToken], async (req, res) => {
+    const userId = req.userId
     //pushes new collection info into db
     const search = await Searches.create(req.body)
     console.log(req.body)
@@ -68,6 +69,7 @@ app.post('/collections', [jwtAuth.verifyToken], async (req, res) => {
 })
 
 app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
+    const userId = req.userId
     try {
         const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
         res.json({ search })
@@ -81,7 +83,6 @@ app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
 app.get('/homes', [jwtAuth.verifyToken], async (req, res) => {
     //Testing extracting userId
     const userId = req.userId
-    console.log("After verification: ", userId);
 
     //gets info for all homes
     console.log('inside of get homes')
@@ -114,6 +115,7 @@ app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
 
 // user preference endpoints
 app.post('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
+    const userId = req.userId
     const userPref = await UserPreference.create(req.body)
     res.json({ userPref })
 })
