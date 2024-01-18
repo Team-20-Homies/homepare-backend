@@ -65,7 +65,7 @@ app.post('/collections', [jwtAuth.verifyToken], async (req, res) => {
     res.json({ search })
 })
 
-app.put('/collections/:id', async (req, res) => {
+app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
     try {
         const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
         res.json({ search })
@@ -83,7 +83,7 @@ app.get('/homes', [jwtAuth.verifyToken], async (req, res) => {
     res.json({ homes })
 })
 
-app.post('/homes', async (req, res) => {
+app.post('/homes', [jwtAuth.verifyToken], async (req, res) => {
     // pushes new home listing into db
     const home = await Homes.create(req.body);
     res.json({ home })
@@ -91,12 +91,12 @@ app.post('/homes', async (req, res) => {
 })
 
 // home details 
-app.get('/home/:id', (req, res) => {
+app.get('/home/:id', [jwtAuth.verifyToken], (req, res) => {
     const homes = Homes.findById(req.params._id).exec();
     res.json(homes)
 })
 
-app.put('/homes/:id', async (req, res) => {
+app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
     try {
         const home = await Homes.findByIdAndUpdate(req.params.id, req.body, { new: true })
         res.json(home)
@@ -107,7 +107,7 @@ app.put('/homes/:id', async (req, res) => {
 
 
 // user preference endpoints
-app.post('/user-preference', async (req, res) => {
+app.post('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
     const userPref = await UserPreference.create(req.body)
     res.json({ userPref })
 })
