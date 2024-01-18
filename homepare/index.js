@@ -114,12 +114,17 @@ app.post('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
 
 
 // Login url
-app.post("/login", [verifyLogin.verifyCredentials], (req, res) => {
+app.post("/login", [verifyLogin.verifyCredentials], async (req, res) => {
 
     const username = req.body.username;
 
+    // Extracting the User's Id based on username at login
+    const userObj = await User.find({ username: username });
+    const user = userObj[0];
+    const userId = user._id;
+
     const token = jwt.sign({username: username}, config.secret, {expiresIn: "24h"});
-    return res.status(200).send({token});
+    return res.status(200).send({token, userId});
 })
 
 // Logout function
