@@ -4,7 +4,6 @@ const User = require('../models/User.js');
 const Blacklist = require("../models/Blacklist.js");
 
 verifyToken = async (req, res, next) => {
-    console.log(req);
     let tokenHeader = req.headers["authorization"];
     console.log(tokenHeader);
     const token = tokenHeader.split(' ')[1];
@@ -24,7 +23,8 @@ verifyToken = async (req, res, next) => {
             if (err) {
                 return res.status(401).send({ message: "Unauthorized", });
             }
-            req.userId = decoded.id;
+            req.userId = decoded.userId;
+            console.log("Decoded", req.userId)
             next();
         });
 };
