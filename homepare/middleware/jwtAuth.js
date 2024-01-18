@@ -23,8 +23,8 @@ verifyToken = async (req, res, next) => {
             if (err) {
                 return res.status(401).send({ message: "Unauthorized", });
             }
-            req.userId = decoded.userId;
-            console.log("Decoded", req.userId)
+            req.UserID = decoded.userId;
+            console.log("Decoded", req.UserID)
             next();
         });
 };
