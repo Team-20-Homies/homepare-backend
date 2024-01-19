@@ -36,6 +36,13 @@ app.post("/register",
         });
 
         res.json({ user })
+        const userId = user._id;
+        console.log("After response", userId)
+        // Automatically create a "My List" for all new users
+        const search = await Searches.create({
+            "search_name": "My List",
+            "userID": userId
+        })
     })
 
 // users - collection
