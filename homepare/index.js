@@ -61,7 +61,8 @@ app.get('/collections', [jwtAuth.verifyToken], async (req, res) => {
 })
 
 app.post('/collections', [jwtAuth.verifyToken], async (req, res) => {
-    Object.assign(req.body, req.UserID);
+    const userID = req.UserID;
+    Object.assign(req.body, { userID });
     //pushes new collection info into db
     const search = await Searches.create(req.body)
     console.log(req.body)
