@@ -61,7 +61,7 @@ app.get('/collections', [jwtAuth.verifyToken], async (req, res) => {
 })
 
 app.post('/collections', [jwtAuth.verifyToken], async (req, res) => {
-    const UserID = req.UserID
+    Object.assign(req.body, req.UserID);
     //pushes new collection info into db
     const search = await Searches.create(req.body)
     console.log(req.body)
@@ -115,7 +115,9 @@ app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
 
 // user preference endpoints
 app.post('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
-    Object.assign(req.body, req.UserID)
+    const UserID = req.UserID
+    Object.assign(req.body, { UserID })
+    console.log("New req.body", req.body)
     const userPref = await UserPreference.create(req.body)
     res.json({ userPref })
 })
