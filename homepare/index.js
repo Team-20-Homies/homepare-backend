@@ -77,7 +77,21 @@ app.post('/collections', [jwtAuth.verifyToken], async (req, res) => {
 })
 
 app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
+    //Defines evaluation parameters
     const UserID = req.UserID
+    const collectionID = req.params.id
+    // Search to see if the collection ID passed also contains the logged in user's ID
+    const searchHasUserID = await Searches.find({ _id: collectionID, userID: UserID }).exec();
+    // Check to see if any search results were returned
+    const arrayIsEmpty = () => {if (searchHasUserID.length === 0 ) {
+        return false;
+    } else {
+        return true;
+    }}
+    // If no search result send bad request status, if true proceed with request
+    if (!arrayIsEmpty()) {
+        res.status(400).send({ message: "Unauthorized Access: User credentials invalid for this search"})
+    }
     try {
         const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
         res.json({ search })
