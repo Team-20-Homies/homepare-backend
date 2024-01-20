@@ -156,11 +156,26 @@ app.get('/home/:id', [jwtAuth.verifyToken], async (req, res) => {
 })
 
 app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
-    try {
-        const home = await Homes.findByIdAndUpdate(req.params.id, req.body, { new: true })
-        res.json(home)
-    } catch {
-        res.status(500).json(Error)
+    //Set parameters for user validation
+    const UserID = req.UserID
+    const houseID = req.params.id
+    // Check searches for one that contains both UserID and HouseID
+    const hasBothIDs = await Searches.find({userID: UserID, houseID: houseID})
+    //Check to see if search returned results
+    const arrayIsEmpty = () => {if (hasBothIDs.length === 0 ) {
+        return false;
+    } else {
+        return true;
+    }}
+    if (!arrayIsEmpty()) {
+        res.status(400).send({ message: "Unauthorized Access: User credentials invalid for this search"})
+    } else {
+        try {
+            const home = await Homes.findByIdAndUpdate(req.params.id, req.body, { new: true })
+            res.json(home)
+        } catch {
+            res.status(500).json(Error)
+        }
     }
 })
 
