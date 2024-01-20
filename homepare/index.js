@@ -90,13 +90,13 @@ app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
     // If no search result send bad request status, if true proceed with request
     if (!arrayIsEmpty()) {
         res.status(400).send({ message: "Unauthorized Access: User credentials invalid for this search"})
-    }
+    } else {
     try {
         const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
         res.json({ search })
     } catch {
         res.status(500).json(Error)
-    }
+    }}
 })
 
 
@@ -132,9 +132,26 @@ app.post('/homes', [jwtAuth.verifyToken], async (req, res) => {
 })
 
 // home details 
-app.get('/home/:id', [jwtAuth.verifyToken], (req, res) => {
-    const homes = Homes.findById(req.params._id).exec();
+app.get('/home/:id', [jwtAuth.verifyToken], async (req, res) => {
+    //Set parameters for user validation
+    const UserID = req.UserID
+    const houseID = req.params.id
+    // Check searches for one that contains both UserID and HouseID
+    const hasBothIDs = await Searches.find({userID: UserID, houseID: houseID})
+    //Check to see if search returned results
+    const arrayIsEmpty = () => {if (hasBothIDs.length === 0 ) {
+        return false;
+    } else {
+        return true;
+    }}
+    // If no search result send bad request status, if true proceed with request
+    if (!arrayIsEmpty()) {
+        res.status(400).send({ message: "Unauthorized Access: User credentials invalid for this search"})
+    } else {
+
+    const homes = await Homes.findById(req.params.id).exec();
     res.json(homes)
+}
 })
 
 app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
