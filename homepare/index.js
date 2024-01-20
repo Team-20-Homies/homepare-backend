@@ -90,12 +90,18 @@ app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
 
 // homes - collection
 app.get('/homes', [jwtAuth.verifyToken], async (req, res) => {
-    //Testing extracting userId
+    //Get User's My List collection
     const UserID = req.UserID
-    console.log(UserID)
+    const myList = await Searches.find({ userID: UserID, search_name: "My List" }).exec();
+    console.log(myList)
+
+    // Separate searchID from object
+    const myHomeIDs = myList[0].houseID;
+    console.log("My List ID:", myHomeIDs)
+    
     //gets info for all homes
     console.log('inside of get homes')
-    const homes = await Homes.find({}).exec();
+    const homes = await Homes.find({ _id: myHomeIDs }).exec();
     res.json({ homes })
 })
 
@@ -113,7 +119,9 @@ app.post('/homes', [jwtAuth.verifyToken], async (req, res) => {
     res.json({ home })
 
     // Update My List to add all new homes _id to it
-    const search = await Searches.findByIdAndUpdate(myListID, { $push: {houseID: [home._id] }})
+    const homeId = home._id.toString()
+    console.log(homeId)
+    const search = await Searches.findByIdAndUpdate(myListID, { $push: {houseID: homeId }})
 })
 
 // home details 
@@ -147,7 +155,6 @@ app.get('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
     console.log(UserID)
     try {
         const userPref = await UserPreference.findOne({ UserID: UserID });
-        console.log("UserPref", userPref)
         res.json(userPref)
     } catch {
         res.status(500).json(Error)
