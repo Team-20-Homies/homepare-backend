@@ -99,10 +99,20 @@ app.get('/homes', [jwtAuth.verifyToken], async (req, res) => {
 })
 
 app.post('/homes', [jwtAuth.verifyToken], async (req, res) => {
+    // Find the logged in user's My List
+    const UserID = req.UserID;
+    const myList = await Searches.find({ userID: UserID }).exec();
+
+    // Separate searchID from search object
+    const myListID = myList[0]._id;
+    console.log("Search Id: ", myListID)
+
     // pushes new home listing into db
     const home = await Homes.create(req.body);
     res.json({ home })
 
+    // Update My List to add all new homes _id to it
+    const search = await Searches.findByIdAndUpdate(myListID, { $push: {houseID: [home._id] }})
 })
 
 // home details 
