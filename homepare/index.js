@@ -91,12 +91,13 @@ app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
     if (!arrayIsEmpty()) {
         res.status(400).send({ message: "Unauthorized Access: User credentials invalid for this search"})
     } else {
-    try {
-        const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
-        res.json({ search })
-    } catch {
-        res.status(500).json(Error)
-    }}
+        try {
+            const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
+            res.json({ search })
+        } catch {
+            res.status(500).json(Error)
+        }
+    }
 })
 
 
