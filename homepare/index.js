@@ -63,7 +63,7 @@ app.get('/collections', [jwtAuth.verifyToken], async (req, res) => {
     // Extract userID from jwt payload
     const UserID = req.UserID
     //get info from database and return json
-    const search = await Searches.find({}).exec();
+    const search = await Searches.find({userID: UserID}).exec();
     res.json({ search })
 })
 
@@ -78,7 +78,6 @@ app.post('/collections', [jwtAuth.verifyToken], async (req, res) => {
 
 app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
     const UserID = req.UserID
-    Object.assign(req.body, req.UserID);
     try {
         const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
         res.json({ search })
