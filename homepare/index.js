@@ -78,6 +78,7 @@ app.post('/collections', [jwtAuth.verifyToken], async (req, res) => {
 
 app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
     const UserID = req.UserID
+    Object.assign(req.body, req.UserID);
     try {
         const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
         res.json({ search })
