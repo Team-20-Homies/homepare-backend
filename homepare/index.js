@@ -37,7 +37,6 @@ app.post("/register",
 
         res.json({ user })
         const userId = user._id;
-        console.log("After response", userId)
         // Automatically create a "My List" for all new users
         const search = await Searches.create({
             "search_name": "My List",
@@ -73,7 +72,6 @@ app.post('/collections', [jwtAuth.verifyToken], async (req, res) => {
     Object.assign(req.body, { userID });
     //pushes new collection info into db
     const search = await Searches.create(req.body)
-    console.log(req.body)
     res.json({ search })
 })
 
@@ -107,14 +105,11 @@ app.get('/homes', [jwtAuth.verifyToken], async (req, res) => {
     //Get User's My List collection
     const UserID = req.UserID
     const myList = await Searches.find({ userID: UserID, search_name: "My List" }).exec();
-    console.log(myList)
 
     // Separate searchID from object
     const myHomeIDs = myList[0].houseID;
-    console.log("My List ID:", myHomeIDs)
     
-    //gets info for all homes
-    console.log('inside of get homes')
+    //gets info for all homes for logged in user
     const homes = await Homes.find({ _id: myHomeIDs }).exec();
     res.json({ homes })
 })
@@ -126,7 +121,6 @@ app.post('/homes', [jwtAuth.verifyToken], async (req, res) => {
 
     // Separate searchID from search object
     const myListID = myList[0]._id;
-    console.log("Search Id: ", myListID)
 
     // pushes new home listing into db
     const home = await Homes.create(req.body);
@@ -134,7 +128,6 @@ app.post('/homes', [jwtAuth.verifyToken], async (req, res) => {
 
     // Update My List to add all new homes _id to it
     const homeId = home._id.toString()
-    console.log(homeId)
     const search = await Searches.findByIdAndUpdate(myListID, { $push: {houseID: homeId }})
 })
 
@@ -158,7 +151,6 @@ app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
 app.post('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
     const UserID = req.UserID
     Object.assign(req.body, { UserID })
-    console.log("New req.body", req.body)
     const userPref = await UserPreference.create(req.body)
     res.json({ userPref })
 })
@@ -166,7 +158,6 @@ app.post('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
 app.get('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
     const UserID = req.UserID;
     Object.assign(req.body, { UserID });
-    console.log(UserID)
     try {
         const userPref = await UserPreference.findOne({ UserID: UserID });
         res.json(userPref)
