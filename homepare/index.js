@@ -53,7 +53,8 @@ app.post('/user', [jwtAuth.verifyToken], async (req, res) => {
 })
 
 app.get('/user', [jwtAuth.verifyToken], async (req, res) => {
-    const user = await User.find({}).exec();
+    const UserID = req.UserID;
+    const user = await User.find({_id: UserID}).exec();
     res.json({ user })
 })
 
