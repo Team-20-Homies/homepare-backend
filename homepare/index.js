@@ -140,6 +140,19 @@ app.post('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
     res.json({ userPref })
 })
 
+app.get('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
+    const UserID = req.UserID;
+    Object.assign(req.body, { UserID });
+    console.log(UserID)
+    try {
+        const userPref = await UserPreference.findOne({ UserID: UserID });
+        console.log("UserPref", userPref)
+        res.json(userPref)
+    } catch {
+        res.status(500).json(Error)
+    }
+})
+
 
 // Login url
 app.post("/login", [verifyLogin.verifyCredentials], async (req, res) => {
@@ -157,14 +170,11 @@ app.post("/login", [verifyLogin.verifyCredentials], async (req, res) => {
 
 // Logout function
 app.get("/logout", async (req, res) => {
-    console.log(req);
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
         return res.status(400).send({ message: "No authorization token"})
     };
-    console.log(authHeader)
     const accessToken = authHeader.split(' ')[1];
-    console.log(accessToken);
     const checkIfBlacklisted = await Blacklist.findOne({ token: accessToken });
     if (checkIfBlacklisted) {
         return res.status(401).send({ message: "Unauthorized: Token expired"});
