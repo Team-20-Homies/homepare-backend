@@ -10,6 +10,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 require('dotenv').config();
 const config = require("./config/auth.config.js");
+const verifyUserInfoUpdate = require('./middleware/verifyUserInfoUpdate.js');
 
 // getting the Models to query the DB
 const User = require('./models/User')
@@ -54,6 +55,24 @@ app.post('/user', [jwtAuth.verifyToken], async (req, res) => {
 app.get('/user', [jwtAuth.verifyToken], async (req, res) => {
     const UserID = req.UserID;
     const user = await User.find({_id: UserID}).exec();
+    res.json({ user })
+})
+
+app.put('/user', [jwtAuth.verifyToken, verifyUserInfoUpdate.checkDuplicateUserInfo], async (req, res) => {
+    const UserID = req.UserID.toString();
+    console.log(UserID);
+    const user = await User.findById(UserID);
+    console.log(req.body.username)
+    if (req.body.username != null) {
+        user.username = req.body.username;
+    }
+    if (req.body.password != null) {
+        user.password = bcrypt.hashSync(req.body.password, 8)
+    }
+    if (req.body.email != null) {
+        user.email = req.body.email;
+    }
+    user.save()
     res.json({ user })
 })
 
