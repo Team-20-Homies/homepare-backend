@@ -36,6 +36,12 @@ app.post("/register",
         });
 
         res.json({ user })
+        const userId = user._id;
+        // Automatically create a "My List" for all new users
+        const search = await Searches.create({
+            "search_name": "My List",
+            "userID": userId
+        })
     })
 
 // users - collection
@@ -46,7 +52,8 @@ app.post('/user', [jwtAuth.verifyToken], async (req, res) => {
 })
 
 app.get('/user', [jwtAuth.verifyToken], async (req, res) => {
-    const user = await User.find({}).exec();
+    const UserID = req.UserID;
+    const user = await User.find({_id: UserID}).exec();
     res.json({ user })
 })
 
@@ -56,7 +63,7 @@ app.get('/collections', [jwtAuth.verifyToken], async (req, res) => {
     // Extract userID from jwt payload
     const UserID = req.UserID
     //get info from database and return json
-    const search = await Searches.find({}).exec();
+    const search = await Searches.find({userID: UserID}).exec();
     res.json({ search })
 })
 
@@ -65,51 +72,110 @@ app.post('/collections', [jwtAuth.verifyToken], async (req, res) => {
     Object.assign(req.body, { userID });
     //pushes new collection info into db
     const search = await Searches.create(req.body)
-    console.log(req.body)
     res.json({ search })
 })
 
 app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
+    //Defines evaluation parameters
     const UserID = req.UserID
-    try {
-        const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
-        res.json({ search })
-    } catch {
-        res.status(500).json(Error)
+    const collectionID = req.params.id
+    // Search to see if the collection ID passed also contains the logged in user's ID
+    const searchHasUserID = await Searches.find({ _id: collectionID, userID: UserID }).exec();
+    // Check to see if any search results were returned
+    const arrayIsEmpty = () => {if (searchHasUserID.length === 0 ) {
+        return false;
+    } else {
+        return true;
+    }}
+    // If no search result send bad request status, if true proceed with request
+    if (!arrayIsEmpty()) {
+        res.status(400).send({ message: "Unauthorized Access: User credentials invalid for this search"})
+    } else {
+        try {
+            const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
+            res.json({ search })
+        } catch {
+            res.status(500).json(Error)
+        }
     }
 })
 
 
 // homes - collection
 app.get('/homes', [jwtAuth.verifyToken], async (req, res) => {
-    //Testing extracting userId
+    //Get User's My List collection
     const UserID = req.UserID
-    console.log(UserID)
-    //gets info for all homes
-    console.log('inside of get homes')
-    const homes = await Homes.find({}).exec();
+    const myList = await Searches.find({ userID: UserID, search_name: "My List" }).exec();
+
+    // Separate searchID from object
+    const myHomeIDs = myList[0].houseID;
+    
+    //gets info for all homes for logged in user
+    const homes = await Homes.find({ _id: myHomeIDs }).exec();
     res.json({ homes })
 })
 
 app.post('/homes', [jwtAuth.verifyToken], async (req, res) => {
+    // Find the logged in user's My List
+    const UserID = req.UserID;
+    const myList = await Searches.find({ userID: UserID }).exec();
+
+    // Separate searchID from search object
+    const myListID = myList[0]._id;
+
     // pushes new home listing into db
     const home = await Homes.create(req.body);
     res.json({ home })
 
+    // Update My List to add all new homes _id to it
+    const homeId = home._id.toString()
+    const search = await Searches.findByIdAndUpdate(myListID, { $push: {houseID: homeId }})
 })
 
 // home details 
-app.get('/home/:id', [jwtAuth.verifyToken], (req, res) => {
-    const homes = Homes.findById(req.params._id).exec();
+app.get('/home/:id', [jwtAuth.verifyToken], async (req, res) => {
+    //Set parameters for user validation
+    const UserID = req.UserID
+    const houseID = req.params.id
+    // Check searches for one that contains both UserID and HouseID
+    const hasBothIDs = await Searches.find({userID: UserID, houseID: houseID})
+    //Check to see if search returned results
+    const arrayIsEmpty = () => {if (hasBothIDs.length === 0 ) {
+        return false;
+    } else {
+        return true;
+    }}
+    // If no search result send bad request status, if true proceed with request
+    if (!arrayIsEmpty()) {
+        res.status(400).send({ message: "Unauthorized Access: User credentials invalid for this search"})
+    } else {
+
+    const homes = await Homes.findById(req.params.id).exec();
     res.json(homes)
+}
 })
 
 app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
-    try {
-        const home = await Homes.findByIdAndUpdate(req.params.id, req.body, { new: true })
-        res.json(home)
-    } catch {
-        res.status(500).json(Error)
+    //Set parameters for user validation
+    const UserID = req.UserID
+    const houseID = req.params.id
+    // Check searches for one that contains both UserID and HouseID
+    const hasBothIDs = await Searches.find({userID: UserID, houseID: houseID})
+    //Check to see if search returned results
+    const arrayIsEmpty = () => {if (hasBothIDs.length === 0 ) {
+        return false;
+    } else {
+        return true;
+    }}
+    if (!arrayIsEmpty()) {
+        res.status(400).send({ message: "Unauthorized Access: User credentials invalid for this search"})
+    } else {
+        try {
+            const home = await Homes.findByIdAndUpdate(req.params.id, req.body, { new: true })
+            res.json(home)
+        } catch {
+            res.status(500).json(Error)
+        }
     }
 })
 
@@ -118,7 +184,6 @@ app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
 app.post('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
     const UserID = req.UserID
     Object.assign(req.body, { UserID })
-    console.log("New req.body", req.body)
     const userPref = await UserPreference.create(req.body)
     res.json({ userPref })
 })
@@ -126,10 +191,8 @@ app.post('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
 app.get('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
     const UserID = req.UserID;
     Object.assign(req.body, { UserID });
-    console.log(UserID)
     try {
         const userPref = await UserPreference.findOne({ UserID: UserID });
-        console.log("UserPref", userPref)
         res.json(userPref)
     } catch {
         res.status(500).json(Error)
