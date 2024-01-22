@@ -5,6 +5,9 @@ const Blacklist = require("../models/Blacklist.js");
 
 verifyToken = async (req, res, next) => {
     let tokenHeader = req.headers["authorization"];
+    if (!tokenHeader.includes("x-access-token ")){
+        return res.status(401).send({ message: "Unathourized: Invalid Token"})
+    }
     const token = tokenHeader.split(' ')[1];
     if (!token) {
         return res.status(403).send({ message: "No token provided"});
