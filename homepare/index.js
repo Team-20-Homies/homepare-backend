@@ -63,13 +63,13 @@ app.put('/user', [jwtAuth.verifyToken, verifyUserInfoUpdate.checkDuplicateUserIn
     console.log(UserID);
     const user = await User.findById(UserID);
     console.log(req.body.username)
-    if (req.body.username != null) {
+    if (req.body.username != null && req.body.username != "") {
         user.username = req.body.username;
     }
-    if (req.body.password != null) {
+    if (req.body.password != null && req.body.password != "") {
         user.password = bcrypt.hashSync(req.body.password, 8)
     }
-    if (req.body.email != null) {
+    if (req.body.email != null && req.body.email != "") {
         user.email = req.body.email;
     }
     user.save()
