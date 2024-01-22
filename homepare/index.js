@@ -98,6 +98,9 @@ app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
     //Defines evaluation parameters
     const UserID = req.UserID
     const collectionID = req.params.id
+    if ( collectionID.length != 24 ){
+        return res.status(400).send({ message: "Invalid Collection ID"})
+    }
     // Search to see if the collection ID passed also contains the logged in user's ID
     const searchHasUserID = await Searches.find({ _id: collectionID, userID: UserID }).exec();
     // Check to see if any search results were returned
