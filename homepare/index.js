@@ -60,9 +60,7 @@ app.get('/user', [jwtAuth.verifyToken], async (req, res) => {
 
 app.put('/user', [jwtAuth.verifyToken, verifyUserInfoUpdate.checkDuplicateUserInfo], async (req, res) => {
     const UserID = req.UserID.toString();
-    console.log(UserID);
     const user = await User.findById(UserID);
-    console.log(req.body.username)
     if (req.body.username != null) {
         user.username = req.body.username;
     }
@@ -223,6 +221,36 @@ app.get('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
     } catch {
         res.status(500).json(Error)
     }
+})
+
+app.put('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
+    const UserID = req.UserID;
+    const userPrefArray = await UserPreference.find({ UserID: UserID });
+    //Reomves userPref from the array it was returned in
+    const userPref = userPrefArray[0]
+    if (req.body.address != null) {
+        userPref.address = req.body.address;
+    }
+    if (req.body.bedrooms != null) {
+        console.log("Inside IF:")
+        userPref.bedrooms = req.body.bedrooms;
+        console.log("Inside IF: ", userPref)
+    }
+    if (req.body.bathrooms != null) {
+        userPref.bathrooms = req.body.bathrooms;
+    }
+    if (req.body.yard != null) {
+        userPref.yard = req.body.yard;
+    }
+    if (req.body.garage != null) {
+        userPref.garage = req.body.garage;
+    }
+    if (req.body.hoa != null) {
+        userPref.hoa = req.body.hoa;
+    }
+    console.log("After update: ", userPref)
+    userPref.save()
+    res.json({ userPref })
 })
 
 
