@@ -127,7 +127,11 @@ app.get('/homes', [jwtAuth.verifyToken], async (req, res) => {
     const myList = await Searches.find({ userID: UserID, search_name: "My List" }).exec();
 
     // Separate searchID from object
+    if (myList.length === 0) {
+        res.status(404).send({ message: "No listings found"})
+     }
     const myHomeIDs = myList[0].houseID;
+    
     
     //gets info for all homes for logged in user
     const homes = await Homes.find({ _id: myHomeIDs }).exec();
