@@ -10,6 +10,9 @@ const morgan = require('morgan');
 const cors = require('cors');
 require('dotenv').config();
 const config = require("./config/auth.config.js");
+const playwright = require('playwright');
+const fs = require('fs');
+const https = require('https');
 
 // getting the Models to query the DB
 const User = require('./models/User')
@@ -123,8 +126,8 @@ app.post("/login", [verifyLogin.verifyCredentials], async (req, res) => {
     const user = userObj[0];
     const userId = user._id;
 
-    const token = jwt.sign({username: username}, config.secret, {expiresIn: "24h"});
-    return res.status(200).send({token, userId});
+    const token = jwt.sign({ username: username }, config.secret, { expiresIn: "24h" });
+    return res.status(200).send({ token, userId });
 })
 
 // Logout function
@@ -132,21 +135,63 @@ app.get("/logout", async (req, res) => {
     console.log(req);
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
-        return res.status(400).send({ message: "No authorization token"})
+        return res.status(400).send({ message: "No authorization token" })
     };
     console.log(authHeader)
     const accessToken = authHeader.split(' ')[1];
     console.log(accessToken);
     const checkIfBlacklisted = await Blacklist.findOne({ token: accessToken });
     if (checkIfBlacklisted) {
-        return res.status(401).send({ message: "Unauthorized: Token expired"});
+        return res.status(401).send({ message: "Unauthorized: Token expired" });
     }
     const newBlacklist = new Blacklist({
         token: accessToken,
     });
     await newBlacklist.save();
-    res.status(200).send({ message: 'Successfully logged out'});
+    res.status(200).send({ message: 'Successfully logged out' });
 });
+
+
+// get images from webscraping zillow
+app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
+    const browser = await playwright["chromium"].launch({ headless: false })
+    const context = await browser.newContext()
+    const page = await context.newPage()
+    let address = req.body.address
+    console.log('the address is: ', address)
+    try {
+        await page.goto("https://zillow.com/homes/" + address + "_rb");
+        await page.locator('_react=StyledGalleryImages__StyledStreamListDesktopFull').waitFor()
+        // const imgs = await page.getByRole('figure').evaluateAll(els => els.map(el => el.children[0].children[0].children[0].srcset))
+
+        const imgs = await page.getByRole('picture').evaluateAll(els => els.map(el => el.children[0].srcset))
+
+        let count = 0
+        let all_images = []
+        let house_images = {}
+        let indvlink = {}
+        imgs.forEach((elem) => {
+            let link = elem.split(",")
+            link.forEach((elem) => {
+                for (i = 0; i < link.length; i++) {
+                    let elem1 = elem.trim();
+                    let newLinks = elem1.split(" ");
+                    indvlink[newLinks[1]] = newLinks[0]
+                }
+            })
+            house_images[count] = indvlink
+            count++
+        })
+        all_images.push(house_images)
+
+        res.json(all_images)
+        await browser.close()
+    }
+    catch (error) {
+        res.status(400).send({ message: 'something went wrong' })
+    }
+})
+
 
 
 // connects DB and starts app
