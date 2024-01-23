@@ -102,24 +102,32 @@ app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
     }
     // Search to see if the collection ID passed also contains the logged in user's ID
     const searchHasUserID = await Searches.find({ _id: collectionID, userID: UserID }).exec();
+
     // Check to see if any search results were returned
     const arrayIsEmpty = () => {if (searchHasUserID.length === 0 ) {
         return false;
     } else {
         return true;
     }}
+
     // If no search result send bad request status, if true proceed with request
     if (!arrayIsEmpty()) {
         res.status(400).send({ message: "Unauthorized Access: User credentials invalid for this search"})
-    } else {
-        try {
-            const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
-            res.json({ search })
-        } catch {
-            res.status(500).json(Error)
-        }
     }
-})
+    
+    //if a user attemtps to change the name of the default "My List", prevent it
+    if (searchHasUserID[0].search_name === "My List"  && (req.body.search_name != null || req.body.search_name != "")) {
+        return res.status(403).send({ message: 'Forbidden: Cannot change the name of "My List" collection'})
+    }
+
+    try {
+        const search = await Searches.findByIdAndUpdate(req.params.id, req.body, { new: true })
+        res.json({ search })
+    } catch {
+        res.status(500).json(Error)
+    }
+}
+)
 
 
 // homes - collection
