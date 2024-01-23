@@ -151,7 +151,6 @@ app.get('/collections-details', [jwtAuth.verifyToken], async (req, res) => {
         }
         searchNameArray.push({searchName, searchID, homeArray})
     }
-    console.log(searchNameArray)
     res.json({searchNameArray})
 })
 
