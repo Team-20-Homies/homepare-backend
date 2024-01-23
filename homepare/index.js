@@ -301,7 +301,7 @@ app.post("/login", [verifyLogin.verifyCredentials], async (req, res) => {
     const user = userObj[0];
     const userId = user._id;
 
-    const token = jwt.sign({ username: username }, config.secret, { expiresIn: "24h" });
+    const token = jwt.sign({ userId: userId }, config.secret, { expiresIn: "24h" });
     return res.status(200).send({ token, userId });
 })
 
