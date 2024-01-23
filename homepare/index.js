@@ -162,9 +162,7 @@ app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
     try {
         await page.goto("https://zillow.com/homes/" + address + "_rb");
         await page.locator('_react=StyledGalleryImages__StyledStreamListDesktopFull').waitFor()
-        // const imgs = await page.getByRole('figure').evaluateAll(els => els.map(el => el.children[0].children[0].children[0].srcset))
-
-        const imgs = await page.getByRole('picture').evaluateAll(els => els.map(el => el.children[0].srcset))
+        const imgs = await page.getByRole('figure').evaluateAll(els => els.map(el => el.children[0].children[0].children[0].srcset))
 
         let count = 0
         let all_images = []
