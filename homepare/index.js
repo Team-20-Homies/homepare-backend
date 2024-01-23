@@ -310,8 +310,13 @@ app.post("/login", [verifyLogin.verifyCredentials], async (req, res) => {
 
     const username = req.body.username;
 
-    const token = jwt.sign({ username: username, role: 'user' }, config.secret, { expiresIn: "24h" });
-    return res.status(200).send({ token });
+    // Extracting the User's Id based on username at login
+    const userObj = await User.find({ username: username });
+    const user = userObj[0];
+    const userId = user._id;
+
+    const token = jwt.sign({ userId: userId }, config.secret, { expiresIn: "24h" });
+    return res.status(200).send({ token, userId });
 })
 
 // Logout function
