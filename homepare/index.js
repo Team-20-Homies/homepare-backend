@@ -344,17 +344,24 @@ app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
         await page.goto("https://zillow.com/homes/" + address + "_rb");
         await page.locator('_react=StyledGalleryImages__StyledStreamListDesktopFull').waitFor()
         const imgs = await page.getByRole('figure').evaluateAll(els => els.map(el => el.children[0].children[0].children[0].srcset))
-
+        console.log('all images: ', imgs)
         let count = 0
         let all_images = []
         let house_images = {}
         let indvlink = {}
         imgs.forEach((elem) => {
+            if (elem === undefined) {
+                elem = "1,1"
+            }
+            console.log('element: ', elem)
             let link = elem.split(",")
-            link.forEach((elem) => {
-                for (i = 0; i < link.length; i++) {
-                    let elem1 = elem.trim();
+            // console.log('link: ', link)
+            console.log('elem: ', elem)
+            link.forEach((x) => {
+                for (i = 0; i < (link.length - 1); i++) {
+                    let elem1 = x.trim();
                     let newLinks = elem1.split(" ");
+                    // console.log('new links: ', newLinks)
                     indvlink[newLinks[1]] = newLinks[0]
                 }
             })
@@ -363,10 +370,12 @@ app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
         })
         all_images.push(house_images)
 
+
         res.json(all_images)
         await browser.close()
     }
     catch (error) {
+        // console.log(error)
         res.status(400).send({ message: 'something went wrong' })
     }
 })
