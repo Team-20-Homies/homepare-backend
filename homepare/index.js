@@ -129,6 +129,26 @@ app.put('/collections/:id', [jwtAuth.verifyToken], async (req, res) => {
 }
 )
 
+// Collection details that will build a response containing the houses in the collection
+app.get('/collections-details', [jwtAuth.verifyToken], async (req, res) => {
+    // Extract userID from jwt payload
+    const UserID = req.UserID
+    const searchNameArray = []
+    //get info from database and return json
+    const userSearches = await Searches.find({userID: UserID});
+    for (const search of userSearches) {
+        const homeArray = []
+        const searchName = search.search_name
+        const searchID = search._id
+        for (house of search.houseID) {
+            const homeObj = await Homes.findById(house)
+            homeArray.push(homeObj)
+        }
+        searchNameArray.push({searchName, searchID, homeArray})
+    }
+    console.log(searchNameArray)
+    res.json({searchNameArray})
+})
 
 // homes - collection
 app.get('/homes', [jwtAuth.verifyToken], async (req, res) => {
