@@ -4,20 +4,6 @@ const axios = require('axios')
 const { json } = require('express')
 const client = new OpenAI()
 
-// async function main() {
-//     const completion = await client.chat.completions.create({
-//         messages: [{ role: "system", content: "You are a helpful assistant." }],
-//         model: "gpt-3.5-turbo",
-//     });
-
-//     console.log(completion.choices[0]);
-// }
-
-// main();
-
-
-let transcription = JSON.stringify("This pad thai is really good")
-// JSON.stringify(transcription)
 
 async function sentiment_analysis(transcription) {
     response = await client.chat.completions.create({
@@ -37,5 +23,5 @@ async function sentiment_analysis(transcription) {
     return response['choices'][0]['message']['content']
 }
 
-sentiment_analysis(transcription)
-    .then((results) => console.log(results))
+
+module.exports = sentiment_analysis

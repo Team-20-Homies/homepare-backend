@@ -1,6 +1,7 @@
 const express = require("express");
-const connectDB = require('./db/connect')
+const connectDB = require('./db/connect');
 const mongoose = require('mongoose')
+const sentiment_analysis = require('./sentiment-analysis.js')
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const jwtAuth = require("./middleware/jwtAuth");
@@ -10,6 +11,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 require('dotenv').config();
 const config = require("./config/auth.config.js");
+
 
 // getting the Models to query the DB
 const User = require('./models/User')
@@ -95,12 +97,42 @@ app.get('/home/:id', (req, res) => {
     res.json(homes)
 })
 
-app.put('/homes/:id', async (req, res) => {
-    try {
-        const home = await Homes.findByIdAndUpdate(req.params.id, req.body, { new: true })
-        res.json(home)
-    } catch {
-        res.status(500).json(Error)
+app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
+    let analysis
+    let transcription = JSON.stringify(req.body.notes)
+
+    const UserID = req.UserID
+    const homeID = req.params.id
+    // Check searches for one that contains both UserID and HouseID
+    console.log('user id: ', UserID)
+    const hasBothIDs = await Searches.find({ userID: UserID, houseID: homeID })
+    //Check to see if search returned results
+    const arrayIsEmpty = () => {
+        if (hasBothIDs.length === 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    if (!arrayIsEmpty()) {
+        res.status(400).send({ message: "Unauthorized Access: User credentials invalid for this search" })
+    } else {
+        // call to the AI sentiment function
+        sentiment_analysis(transcription)
+            .then(async (results) => {
+                // console.log(results)
+                analysis = results
+                Object.assign(req.body, { sentiment: analysis })
+                console.log(typeof (analysis))
+                try {
+                    const home = await Homes.findByIdAndUpdate(homeID, req.body)
+                    console.log('hello world ', home.sentiment)
+
+                    res.json({ home })
+                } catch (error) {
+                    console.log(error)
+                }
+            })
     }
 })
 
@@ -120,37 +152,6 @@ app.post("/login", [verifyLogin.verifyCredentials], (req, res) => {
     const token = jwt.sign({ username: username, role: 'user' }, config.secret, { expiresIn: "24h" });
     return res.status(200).send({ token });
 })
-
-
-// AI Integration
-
-function sentiment_analysis(transcription) {
-    response = client.chat.completions.create(
-        model = "gpt-4",
-        temperature = 0,
-        messages = [
-            {
-                "role": "system",
-                "content": "As an AI with expertise in language and emotion analysis, your task is to analyze the sentiment of the following text. Please consider the overall tone of the discussion, the emotion conveyed by the language used, and the context in which words and phrases are used. Indicate whether the sentiment is generally positive, negative, or neutral, and provide brief explanations for your analysis where possible."
-            },
-            {
-                "role": "user",
-                "content": transcription
-            }
-        ]
-    )
-    return response['choices'][0]['message']['content']
-}
-
-
-
-
-
-
-
-
-
-
 
 
 // connects DB and starts app
