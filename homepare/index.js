@@ -65,7 +65,6 @@ app.get('/user', [jwtAuth.verifyToken], async (req, res) => {
 app.put('/user', [jwtAuth.verifyToken, verifyUserInfoUpdate.checkDuplicateUserInfo], async (req, res) => {
     const UserID = req.UserID.toString();
     const user = await User.findById(UserID);
-    console.log(req.body.username)
     if (req.body.username != null && req.body.username != "") {
         user.username = req.body.username;
     }
@@ -241,10 +240,8 @@ app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
                 // console.log(results)
                 analysis = results
                 Object.assign(req.body, { sentiment: analysis })
-                console.log(typeof (analysis))
                 try {
                     const home = await Homes.findByIdAndUpdate(homeID, req.body)
-                    console.log('hello world ', home.sentiment)
 
                     res.json({ home })
                 } catch (error) {
@@ -277,15 +274,13 @@ app.get('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
 app.put('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
     const UserID = req.UserID;
     const userPrefArray = await UserPreference.find({ UserID: UserID });
-    //Reomves userPref from the array it was returned in
+    //Removes userPref from the array it was returned in
     const userPref = userPrefArray[0]
     if (req.body.address != null) {
         userPref.address = req.body.address;
     }
     if (req.body.bedrooms != null) {
-        console.log("Inside IF:")
         userPref.bedrooms = req.body.bedrooms;
-        console.log("Inside IF: ", userPref)
     }
     if (req.body.bathrooms != null) {
         userPref.bathrooms = req.body.bathrooms;
@@ -299,7 +294,6 @@ app.put('/user-preference', [jwtAuth.verifyToken], async (req, res) => {
     if (req.body.hoa != null) {
         userPref.hoa = req.body.hoa;
     }
-    console.log("After update: ", userPref)
     userPref.save()
     res.json({ userPref })
 })
@@ -344,12 +338,10 @@ app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
     const context = await browser.newContext()
     const page = await context.newPage()
     let address = req.body.address
-    console.log('the address is: ', address)
     try {
         await page.goto("https://zillow.com/homes/" + address + "_rb");
         await page.locator('_react=StyledGalleryImages__StyledStreamListDesktopFull').waitFor()
         const imgs = await page.getByRole('figure').evaluateAll(els => els.map(el => el.children[0].children[0].children[0].srcset))
-        console.log('all images: ', imgs)
         let count = 0
         let all_images = []
         let house_images = {}
@@ -358,15 +350,11 @@ app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
             if (elem === undefined) {
                 elem = "1,1"
             }
-            console.log('element: ', elem)
             let link = elem.split(",")
-            // console.log('link: ', link)
-            console.log('elem: ', elem)
             link.forEach((x) => {
                 for (i = 0; i < (link.length - 1); i++) {
                     let elem1 = x.trim();
                     let newLinks = elem1.split(" ");
-                    // console.log('new links: ', newLinks)
                     indvlink[newLinks[1]] = newLinks[0]
                 }
             })
@@ -380,7 +368,6 @@ app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
         await browser.close()
     }
     catch (error) {
-        // console.log(error)
         res.status(400).send({ message: 'something went wrong' })
     }
 })
