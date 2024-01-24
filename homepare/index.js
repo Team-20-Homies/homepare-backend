@@ -334,7 +334,7 @@ app.get("/logout", async (req, res) => {
 
 // get images from webscraping zillow
 app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
-    const browser = await playwright["chromium"].launch({ headless: false })
+    const browser = await playwright["chromium"].launch({ headless: true })
     const context = await browser.newContext()
     const page = await context.newPage()
     let address = req.body.address
