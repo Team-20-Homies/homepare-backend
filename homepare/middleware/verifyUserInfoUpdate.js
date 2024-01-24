@@ -1,4 +1,3 @@
-// const models = require('./models');
 const User = require('../models/User.js');
 
 // Check for duplicate user name and email
