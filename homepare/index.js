@@ -1,6 +1,7 @@
 const express = require("express");
-const connectDB = require('./db/connect')
+const connectDB = require('./db/connect');
 const mongoose = require('mongoose')
+const sentiment_analysis = require('./sentiment-analysis.js')
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const jwtAuth = require("./middleware/jwtAuth");
@@ -140,7 +141,7 @@ app.get('/collections-details', [jwtAuth.verifyToken], async (req, res) => {
     const UserID = req.UserID
     const searchNameArray = []
     //get info from database and return json
-    const userSearches = await Searches.find({userID: UserID});
+    const userSearches = await Searches.find({ userID: UserID });
     for (const search of userSearches) {
         const homeArray = []
         const searchName = search.search_name
@@ -149,9 +150,9 @@ app.get('/collections-details', [jwtAuth.verifyToken], async (req, res) => {
             const homeObj = await Homes.findById(house)
             homeArray.push(homeObj)
         }
-        searchNameArray.push({searchName, searchID, homeArray})
+        searchNameArray.push({ searchName, searchID, homeArray })
     }
-    res.json({searchNameArray})
+    res.json({ searchNameArray })
 })
 
 // homes - collection
@@ -215,11 +216,14 @@ app.get('/home/:id', [jwtAuth.verifyToken], async (req, res) => {
 })
 
 app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
-    //Set parameters for user validation
+    let analysis
+    let transcription = JSON.stringify(req.body.notes)
+
     const UserID = req.UserID
-    const houseID = req.params.id
+    const homeID = req.params.id
     // Check searches for one that contains both UserID and HouseID
-    const hasBothIDs = await Searches.find({ userID: UserID, houseID: houseID })
+    console.log('user id: ', UserID)
+    const hasBothIDs = await Searches.find({ userID: UserID, houseID: homeID })
     //Check to see if search returned results
     const arrayIsEmpty = () => {
         if (hasBothIDs.length === 0) {
@@ -231,12 +235,22 @@ app.put('/homes/:id', [jwtAuth.verifyToken], async (req, res) => {
     if (!arrayIsEmpty()) {
         res.status(400).send({ message: "Unauthorized Access: User credentials invalid for this search" })
     } else {
-        try {
-            const home = await Homes.findByIdAndUpdate(req.params.id, req.body, { new: true })
-            res.json(home)
-        } catch {
-            res.status(500).json(Error)
-        }
+        // call to the AI sentiment function
+        sentiment_analysis(transcription)
+            .then(async (results) => {
+                // console.log(results)
+                analysis = results
+                Object.assign(req.body, { sentiment: analysis })
+                console.log(typeof (analysis))
+                try {
+                    const home = await Homes.findByIdAndUpdate(homeID, req.body)
+                    console.log('hello world ', home.sentiment)
+
+                    res.json({ home })
+                } catch (error) {
+                    console.log(error)
+                }
+            })
     }
 })
 
@@ -335,17 +349,24 @@ app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
         await page.goto("https://zillow.com/homes/" + address + "_rb");
         await page.locator('_react=StyledGalleryImages__StyledStreamListDesktopFull').waitFor()
         const imgs = await page.getByRole('figure').evaluateAll(els => els.map(el => el.children[0].children[0].children[0].srcset))
-
+        console.log('all images: ', imgs)
         let count = 0
         let all_images = []
         let house_images = {}
         let indvlink = {}
         imgs.forEach((elem) => {
+            if (elem === undefined) {
+                elem = "1,1"
+            }
+            console.log('element: ', elem)
             let link = elem.split(",")
-            link.forEach((elem) => {
-                for (i = 0; i < link.length; i++) {
-                    let elem1 = elem.trim();
+            // console.log('link: ', link)
+            console.log('elem: ', elem)
+            link.forEach((x) => {
+                for (i = 0; i < (link.length - 1); i++) {
+                    let elem1 = x.trim();
                     let newLinks = elem1.split(" ");
+                    // console.log('new links: ', newLinks)
                     indvlink[newLinks[1]] = newLinks[0]
                 }
             })
@@ -354,14 +375,15 @@ app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
         })
         all_images.push(house_images)
 
+
         res.json(all_images)
         await browser.close()
     }
     catch (error) {
+        // console.log(error)
         res.status(400).send({ message: 'something went wrong' })
     }
 })
-
 
 
 // connects DB and starts app
