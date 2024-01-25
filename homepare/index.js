@@ -377,7 +377,7 @@ app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
 const start = async () => {
     try {
         await connectDB(process.env.MONGO_URI);
-        app.listen(3000, () => console.log("API server is running..."));
+        app.listen(process.env.PORT, () => console.log("API server is running..."));
 
     } catch (error) {
         console.log(error);
