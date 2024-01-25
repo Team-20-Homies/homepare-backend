@@ -10,7 +10,7 @@
     "test": "\"echo \\\"Error: no test specified\\\" && exit 1\"",
     "lint": "eslint src/js",
     "start": "node index.js",
-    "heroku-cleanup": "yarn run playwright install chromium"
+    "heroku-cleanup": "npm run playwright install chromium"
   },
   "repository": {
     "type": "git",
