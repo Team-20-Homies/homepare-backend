@@ -11,7 +11,8 @@ const morgan = require('morgan');
 const cors = require('cors');
 require('dotenv').config();
 const config = require("./config/auth.config.js");
-const playwright = require('playwright');
+// const playwright = require('playwright');
+const playwright = require('playwright-aws-lambda')
 const fs = require('fs');
 const https = require('https');
 const verifyUserInfoUpdate = require('./middleware/verifyUserInfoUpdate.js');
@@ -176,17 +177,23 @@ app.post('/homes', [jwtAuth.verifyToken], async (req, res) => {
     // Find the logged in user's My List
     const UserID = req.UserID;
     const myList = await Searches.find({ userID: UserID }).exec();
+    const myHomes = await Homes.find({ userID: UserID, address: req.body.address }).exec();
 
     // Separate searchID from search object
     const myListID = myList[0]._id;
 
-    // pushes new home listing into db
-    const home = await Homes.create(req.body);
-    res.json({ home })
+    if (myHomes._id === myList[0].houseID) {
+        res.status(400).send({ message: "Alert! Duplicate address cannot be added to listings." })
+    } else {
+        // pushes new home listing into db
+        const home = await Homes.create(req.body);
+        res.json({ home });
 
-    // Update My List to add all new homes _id to it
-    const homeId = home._id.toString()
-    const search = await Searches.findByIdAndUpdate(myListID, { $push: { houseID: homeId } })
+        // Update My List to add all new homes _id to it
+        const homeId = home._id.toString()
+
+        const search = await Searches.findByIdAndUpdate(myListID, { $push: { houseID: homeId } })
+    }
 })
 
 // home details 
@@ -334,14 +341,19 @@ app.get("/logout", async (req, res) => {
 
 // get images from webscraping zillow
 app.get('/images', [jwtAuth.verifyToken], async (req, res) => {
-    const browser = await playwright["chromium"].launch({ headless: true })
+    // const browser = await playwright["chromium"].launch({ headless: true })
+    const browser = await playwright.launchChromium();
     const context = await browser.newContext()
     const page = await context.newPage()
+
+
     let address = req.body.address
     try {
         await page.goto("https://zillow.com/homes/" + address + "_rb");
         await page.locator('_react=StyledGalleryImages__StyledStreamListDesktopFull').waitFor()
         const imgs = await page.getByRole('figure').evaluateAll(els => els.map(el => el.children[0].children[0].children[0].srcset))
+
+
         let count = 0
         let all_images = []
         let house_images = {}
